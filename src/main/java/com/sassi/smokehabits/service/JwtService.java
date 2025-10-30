@@ -1,5 +1,8 @@
 package com.sassi.smokehabits.service;
 
+import com.sassi.smokehabits.exception.InvalidTokenException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -28,11 +31,15 @@ public class JwtService {
     }
 
     public Claims extractClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(generateSigningKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(generateSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (SignatureException e) {
+            throw new InvalidTokenException("Invalid token");
+        }
     }
     private SecretKey generateSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());

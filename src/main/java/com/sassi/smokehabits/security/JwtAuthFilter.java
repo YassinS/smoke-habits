@@ -1,5 +1,6 @@
 package com.sassi.smokehabits.security;
 
+import com.sassi.smokehabits.exception.InvalidTokenException;
 import com.sassi.smokehabits.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -61,7 +62,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
     }
 }
 
