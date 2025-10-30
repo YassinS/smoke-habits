@@ -1,4 +1,4 @@
-package com.sassi.smokehabits.dto;
+package com.sassi.smokehabits.dto.response;
 
 import java.time.LocalDateTime;
 

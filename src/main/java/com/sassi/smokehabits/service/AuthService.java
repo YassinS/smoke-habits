@@ -1,10 +1,13 @@
 package com.sassi.smokehabits.service;
 
-import com.sassi.smokehabits.dto.LoginRequest;
-import com.sassi.smokehabits.dto.RegisterRequest;
-import com.sassi.smokehabits.dto.TokenResponse;
+import com.sassi.smokehabits.dto.security.request.LoginRequest;
+import com.sassi.smokehabits.dto.security.request.RegisterRequest;
+import com.sassi.smokehabits.dto.security.response.TokenResponse;
+import com.sassi.smokehabits.entity.RefreshToken;
 import com.sassi.smokehabits.entity.User;
+import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.repository.UserRepository;
+import com.sassi.smokehabits.security.service.RefreshTokenService;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
@@ -14,10 +17,12 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(UserRepository userRepository, JwtService jwtService) {
+    public AuthService(UserRepository userRepository, JwtService jwtService,  RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public TokenResponse register(RegisterRequest request) {
@@ -28,7 +33,8 @@ public class AuthService {
         User user = new User(request.getEmail(), hashed);
         userRepository.save(user);
         String token = jwtService.generateToken(user.getEmail());
-        return new TokenResponse(token);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        return new TokenResponse(token, refreshToken.getToken());
     }
 
     public TokenResponse login(LoginRequest request) {
@@ -36,10 +42,11 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getHashedPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new AuthenticationError("Invalid credentials");
         }
 
         String token = jwtService.generateToken(user.getEmail());
-        return new TokenResponse(token);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        return new TokenResponse(token, refreshToken.getToken());
     }
 }

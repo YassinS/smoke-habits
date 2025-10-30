@@ -1,9 +1,8 @@
 package com.sassi.smokehabits.controller;
 
-import com.sassi.smokehabits.dto.CigaretteResponse;
-import com.sassi.smokehabits.dto.LogCigaretteRequest;
+import com.sassi.smokehabits.dto.response.CigaretteResponse;
+import com.sassi.smokehabits.dto.request.LogCigaretteRequest;
 import com.sassi.smokehabits.entity.CigaretteEntry;
-import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.security.SmokeUserDetails;
 import com.sassi.smokehabits.service.CigaretteService;
 import org.springframework.http.ResponseEntity;

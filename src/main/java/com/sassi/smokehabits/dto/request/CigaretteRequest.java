@@ -1,4 +1,4 @@
-package com.sassi.smokehabits.dto;
+package com.sassi.smokehabits.dto.request;
 
 public class CigaretteRequest {
     private Integer cravingLevel = null;

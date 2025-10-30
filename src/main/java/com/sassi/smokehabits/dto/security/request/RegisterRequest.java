@@ -1,6 +1,6 @@
-package com.sassi.smokehabits.dto;
+package com.sassi.smokehabits.dto.security.request;
 
-public class LoginRequest {
+public class RegisterRequest {
     private String email;
     private String password;
 

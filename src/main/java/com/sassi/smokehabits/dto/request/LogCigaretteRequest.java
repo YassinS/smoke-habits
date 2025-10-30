@@ -1,4 +1,4 @@
-package com.sassi.smokehabits.dto;
+package com.sassi.smokehabits.dto.request;
 
 public class LogCigaretteRequest {
     private Integer cravingLevel;
