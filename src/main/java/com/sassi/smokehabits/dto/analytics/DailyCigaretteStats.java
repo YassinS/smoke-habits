@@ -1,4 +1,4 @@
-package com.sassi.smokehabits.dto;
+package com.sassi.smokehabits.dto.analytics;
 import java.time.LocalDate;
 
 public class DailyCigaretteStats {

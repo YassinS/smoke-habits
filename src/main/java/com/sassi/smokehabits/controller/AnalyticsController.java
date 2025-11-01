@@ -1,6 +1,8 @@
 package com.sassi.smokehabits.controller;
 
-import com.sassi.smokehabits.dto.DailyCigaretteStats;
+import com.sassi.smokehabits.dto.analytics.DailyCigaretteStats;
+import com.sassi.smokehabits.dto.analytics.MonthlyCigaretteStats;
+import com.sassi.smokehabits.dto.analytics.WeeklyCigaretteStats;
 import com.sassi.smokehabits.security.SmokeUserDetails;
 import com.sassi.smokehabits.service.AnalyticsService;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +32,39 @@ public class AnalyticsController {
         List<DailyCigaretteStats> stats = analyticsService.getDailyStats(userId);
         return ResponseEntity.ok(stats);
     }
+
+    @GetMapping("/weekly")
+    public ResponseEntity<List<WeeklyCigaretteStats>> getWeeklyStats(Authentication authentication) {
+        SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        return ResponseEntity.ok(analyticsService.getWeeklyStats(userId));
+    }
+
+    @GetMapping("/monthly")
+    public ResponseEntity<List<MonthlyCigaretteStats>> getMonthlyStats(Authentication authentication) {
+        SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        List<MonthlyCigaretteStats> stats = analyticsService.getMonthlyStats(userId);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/longest-streak")
+    public ResponseEntity<Integer> getLongestStreak(Authentication authentication) {
+        SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        int streak = analyticsService.calculateLongestStreak(userId);
+        return ResponseEntity.ok(streak);
+    }
+
+    @GetMapping("/avg-craving")
+    public ResponseEntity<Double> getOverallAvgCraving(Authentication authentication) {
+        SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        double avgCraving = analyticsService.getOverallAvgCraving(userId);
+        return ResponseEntity.ok(avgCraving);
+    }
+
+
+
 }
 
