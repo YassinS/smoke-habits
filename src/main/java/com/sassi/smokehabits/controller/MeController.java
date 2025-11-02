@@ -17,8 +17,7 @@ public class MeController {
     public ResponseEntity<Map<String, Object>> getMe(Authentication authentication) {
         // Spring injects Authentication automatically
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("username", authentication.getName());
-        userInfo.put("roles", authentication.getAuthorities());
+        userInfo.put("email", authentication.getName());
         return ResponseEntity.ok(userInfo);
     }
 }

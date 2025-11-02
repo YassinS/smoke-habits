@@ -2,10 +2,14 @@ package com.sassi.smokehabits.security;
 
 import com.sassi.smokehabits.exception.InvalidTokenException;
 import com.sassi.smokehabits.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,45 +28,48 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationEntryPoint  authenticationEntryPoint;
 
-    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtService jwtService, UserDetailsService userDetailsService,  JwtAuthenticationEntryPoint authenticationEntryPoint) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+        this.authenticationEntryPoint = authenticationEntryPoint;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-              HttpServletResponse response,
-              FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
+        String authHeader = request.getHeader(AUTHORIZATION);
         SecurityContext context = SecurityContextHolder.getContext();
-        String authorizationHeader = request.getHeader(AUTHORIZATION);
 
-        String username = null;
-        String jwtTokenHeader =null;
+        if (authHeader != null && authHeader.startsWith("Bearer") && context.getAuthentication() == null) {
+            String token = authHeader.substring(7);
+            try {
+                String type = jwtService.extractTokenType(token);
+                if (!"access".equals(type)) {
+                    throw new BadCredentialsException("Token is not an access token");
+                }
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer")){
-            jwtTokenHeader = authorizationHeader.substring(7);
-            username = jwtService.extractSubject(jwtTokenHeader);
-        }
+                String username = jwtService.extractSubject(token);
+                UserDetails user = userDetailsService.loadUserByUsername(username);
 
-        if (jwtTokenHeader == null || context.getAuthentication() != null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+                if (!jwtService.isTokenValid(token)) {
+                    throw new CredentialsExpiredException("JWT token expired");
+                }
 
-        String type = jwtService.extractTokenType(jwtTokenHeader);
-
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails user = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isTokenValid(jwtTokenHeader) && type.equals("access")){
                 var authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                context.setAuthentication(authToken);
+
+            } catch (Exception e) {
+                authenticationEntryPoint.commence(request, response,
+                        new org.springframework.security.core.AuthenticationException(e.getMessage(), e) {});
+                return; // stop filter chain
             }
         }
-            filterChain.doFilter(request, response);
+
+        filterChain.doFilter(request, response);
     }
 }
 
