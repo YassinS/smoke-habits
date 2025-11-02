@@ -3,38 +3,37 @@ package com.sassi.smokehabits.dto.analytics;
 import java.time.YearMonth;
 
 public class MonthlyCigaretteStats {
+
     private YearMonth month;
     private int totalCigarettes;
-    private double avgCravingLevel;
+    private double avgCraving;
 
-    public MonthlyCigaretteStats(YearMonth month, int totalCigarettes, double avgCravingLevel) {
+    // Trend indicators compared to previous month
+    private Trend trendCount;
+    private Trend trendCraving;
+
+    // ----------------- Constructors -----------------
+    public MonthlyCigaretteStats() { }
+
+    public MonthlyCigaretteStats(YearMonth month, int totalCigarettes, double avgCraving) {
         this.month = month;
         this.totalCigarettes = totalCigarettes;
-        this.avgCravingLevel = avgCravingLevel;
+        this.avgCraving = avgCraving;
     }
 
-    public YearMonth getMonth() {
-        return month;
-    }
+    // ----------------- Getters & Setters -----------------
+    public YearMonth getMonth() { return month; }
+    public void setMonth(YearMonth month) { this.month = month; }
 
-    public void setMonth(YearMonth month) {
-        this.month = month;
-    }
+    public int getTotalCigarettes() { return totalCigarettes; }
+    public void setTotalCigarettes(int totalCigarettes) { this.totalCigarettes = totalCigarettes; }
 
-    public int getTotalCigarettes() {
-        return totalCigarettes;
-    }
+    public double getAvgCraving() { return avgCraving; }
+    public void setAvgCraving(double avgCraving) { this.avgCraving = avgCraving; }
 
-    public void setTotalCigarettes(int totalCigarettes) {
-        this.totalCigarettes = totalCigarettes;
-    }
+    public Trend getTrendCount() { return trendCount; }
+    public void setTrendCount(Trend trendCount) { this.trendCount = trendCount; }
 
-    public double getAvgCravingLevel() {
-        return avgCravingLevel;
-    }
-
-    public void setAvgCravingLevel(double avgCravingLevel) {
-        this.avgCravingLevel = avgCravingLevel;
-    }
+    public Trend getTrendCraving() { return trendCraving; }
+    public void setTrendCraving(Trend trendCraving) { this.trendCraving = trendCraving; }
 }
-

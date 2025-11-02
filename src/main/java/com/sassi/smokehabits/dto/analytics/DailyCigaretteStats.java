@@ -1,4 +1,5 @@
 package com.sassi.smokehabits.dto.analytics;
+
 import java.time.LocalDate;
 
 public class DailyCigaretteStats {
@@ -7,11 +8,20 @@ public class DailyCigaretteStats {
     private int count;
     private double avgCraving;
 
+    // Moving averages (window: 7 days)
     private double movingAvgCount;
     private double movingAvgCraving;
 
-    private double trendCount;
-    private double trendCraving;
+    // Rolling averages for craving
+    private double rollingAvgCraving7;
+    private double rollingAvgCraving14;
+
+    // Trend indicators
+    private Trend trendCount;
+    private Trend trendCraving;
+
+    // ----------------- Constructors -----------------
+    public DailyCigaretteStats() { }
 
     public DailyCigaretteStats(LocalDate day, int count, double avgCraving) {
         this.day = day;
@@ -19,60 +29,31 @@ public class DailyCigaretteStats {
         this.avgCraving = avgCraving;
     }
 
-    public LocalDate getDay() {
-        return day;
-    }
+    // ----------------- Getters & Setters -----------------
+    public LocalDate getDay() { return day; }
+    public void setDay(LocalDate day) { this.day = day; }
 
-    public void setDay(LocalDate day) {
-        this.day = day;
-    }
+    public int getCount() { return count; }
+    public void setCount(int count) { this.count = count; }
 
-    public int getCount() {
-        return count;
-    }
+    public double getAvgCraving() { return avgCraving; }
+    public void setAvgCraving(double avgCraving) { this.avgCraving = avgCraving; }
 
-    public void setCount(int count) {
-        this.count = count;
-    }
+    public double getMovingAvgCount() { return movingAvgCount; }
+    public void setMovingAvgCount(double movingAvgCount) { this.movingAvgCount = movingAvgCount; }
 
-    public double getAvgCraving() {
-        return avgCraving;
-    }
+    public double getMovingAvgCraving() { return movingAvgCraving; }
+    public void setMovingAvgCraving(double movingAvgCraving) { this.movingAvgCraving = movingAvgCraving; }
 
-    public void setAvgCraving(double avgCraving) {
-        this.avgCraving = avgCraving;
-    }
+    public double getRollingAvgCraving7() { return rollingAvgCraving7; }
+    public void setRollingAvgCraving7(double rollingAvgCraving7) { this.rollingAvgCraving7 = rollingAvgCraving7; }
 
-    public double getMovingAvgCount() {
-        return movingAvgCount;
-    }
+    public double getRollingAvgCraving14() { return rollingAvgCraving14; }
+    public void setRollingAvgCraving14(double rollingAvgCraving14) { this.rollingAvgCraving14 = rollingAvgCraving14; }
 
-    public void setMovingAvgCount(double movingAvgCount) {
-        this.movingAvgCount = movingAvgCount;
-    }
+    public Trend getTrendCount() { return trendCount; }
+    public void setTrendCount(Trend trendCount) { this.trendCount = trendCount; }
 
-    public double getMovingAvgCraving() {
-        return movingAvgCraving;
-    }
-
-    public void setMovingAvgCraving(double movingAvgCraving) {
-        this.movingAvgCraving = movingAvgCraving;
-    }
-
-    public double getTrendCount() {
-        return trendCount;
-    }
-
-    public void setTrendCount(double trendCount) {
-        this.trendCount = trendCount;
-    }
-
-    public double getTrendCraving() {
-        return trendCraving;
-    }
-
-    public void setTrendCraving(double trendCraving) {
-        this.trendCraving = trendCraving;
-    }
+    public Trend getTrendCraving() { return trendCraving; }
+    public void setTrendCraving(Trend trendCraving) { this.trendCraving = trendCraving; }
 }
-
