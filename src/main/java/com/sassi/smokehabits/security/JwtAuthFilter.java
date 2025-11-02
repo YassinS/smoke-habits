@@ -8,6 +8,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +28,8 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthFilter.class);
+
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final JwtAuthenticationEntryPoint  authenticationEntryPoint;
@@ -40,36 +44,52 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authHeader = request.getHeader(AUTHORIZATION);
-        SecurityContext context = SecurityContextHolder.getContext();
+        try {
+            String authHeader = request.getHeader(AUTHORIZATION);
+            SecurityContext context = SecurityContextHolder.getContext();
+            
+            logger.info("JWT Filter processing request: {} {}", request.getMethod(), request.getRequestURI());
 
-        if (authHeader != null && authHeader.startsWith("Bearer") && context.getAuthentication() == null) {
-            String token = authHeader.substring(7);
-            try {
-                String type = jwtService.extractTokenType(token);
-                if (!"access".equals(type)) {
-                    throw new BadCredentialsException("Token is not an access token");
+            if (authHeader != null && authHeader.startsWith("Bearer") && context.getAuthentication() == null) {
+                String token = authHeader.substring(7);
+                logger.info("JWT Filter: Processing Bearer token");
+                
+                try {
+                    String type = jwtService.extractTokenType(token);
+                    logger.info("JWT Filter: Token type: {}", type);
+                    
+                    if (!"access".equals(type)) {
+                        throw new BadCredentialsException("Token is not an access token");
+                    }
+
+                    String username = jwtService.extractSubject(token);
+                    logger.info("JWT Filter: Extracted username: {}", username);
+                    
+                    UserDetails user = userDetailsService.loadUserByUsername(username);
+                    logger.info("JWT Filter: Loaded user details for: {}", username);
+
+                    if (!jwtService.isTokenValid(token)) {
+                        throw new CredentialsExpiredException("JWT token expired");
+                    }
+
+                    var authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    context.setAuthentication(authToken);
+                    logger.info("JWT Filter: Successfully authenticated user: {}", username);
+
+                } catch (Exception e) {
+                    logger.error("JWT Filter: Authentication error: {}", e.getMessage(), e);
+                    authenticationEntryPoint.commence(request, response,
+                            new org.springframework.security.core.AuthenticationException(e.getMessage(), e) {});
+                    return; // stop filter chain
                 }
-
-                String username = jwtService.extractSubject(token);
-                UserDetails user = userDetailsService.loadUserByUsername(username);
-
-                if (!jwtService.isTokenValid(token)) {
-                    throw new CredentialsExpiredException("JWT token expired");
-                }
-
-                var authToken = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                context.setAuthentication(authToken);
-
-            } catch (Exception e) {
-                authenticationEntryPoint.commence(request, response,
-                        new org.springframework.security.core.AuthenticationException(e.getMessage(), e) {});
-                return; // stop filter chain
             }
-        }
 
-        filterChain.doFilter(request, response);
+            filterChain.doFilter(request, response);
+        } catch (Exception e) {
+            logger.error("JWT Filter: Unexpected error for {} {}: {}", request.getMethod(), request.getRequestURI(), e.getMessage(), e);
+            throw e;
+        }
     }
 }
 
