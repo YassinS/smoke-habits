@@ -23,23 +23,30 @@ public class CigaretteController {
 
     public CigaretteController(CigaretteService cigaretteService) {
         this.cigaretteService = cigaretteService;
+        logger.info("CigaretteController initialized");
     }
 
     @PostMapping("/log")
     public ResponseEntity<CigaretteResponse> logCigarette(Authentication authentication,
                                                           @RequestBody LogCigaretteRequest logRequestBody) {
+        logger.info("=== CigaretteController.logCigarette() called ===");
         try {
+            logger.info("Step 1: Getting user details from authentication");
             SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+            
+            logger.info("Step 2: Extracting user ID");
             UUID userId = userDetails.getUserId();
             logger.info("Logging cigarette for user: {} with craving level: {}", userId, logRequestBody.getCravingLevel());
             
+            logger.info("Step 3: Calling cigaretteService.logCigarette()");
             CigaretteEntry entry = cigaretteService.logCigarette(userId, logRequestBody.getCravingLevel());
             logger.info("Successfully logged cigarette with id: {} for user: {}", entry.getId(), userId);
             
+            logger.info("Step 4: Creating response and returning");
             CigaretteResponse response = new CigaretteResponse(entry.getId(), entry.getTimestamp());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Error logging cigarette", e);
+            logger.error("ERROR in CigaretteController.logCigarette(): {}", e.getMessage(), e);
             throw e;
         }
     }
@@ -47,24 +54,30 @@ public class CigaretteController {
 
     @GetMapping
     public ResponseEntity<List<CigaretteResponse>> getAll(Authentication authentication) {
+        logger.info("=== CigaretteController.getAll() called ===");
         try {
+            logger.info("Step 1: Getting user details from authentication");
             SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+            
+            logger.info("Step 2: Extracting user ID");
             UUID userId = userDetails.getUserId();
-            logger.info("Fetching all cigarettes for user: {}", userId);
+            logger.info("Fetching cigarettes for user: {}", userId);
             
+            logger.info("Step 3: Calling cigaretteService.getAll()");
             List<CigaretteEntry> cigaretteEntries = cigaretteService.getAll(userId);
-            logger.info("Found {} cigarette entries for user: {}", cigaretteEntries.size(), userId);
+            logger.info("Found {} cigarette entries", cigaretteEntries.size());
             
+            logger.info("Step 4: Mapping to response DTOs");
             List<CigaretteResponse> response = cigaretteEntries.stream()
                     .map(entry -> new CigaretteResponse(
                             entry.getId(),
                             entry.getTimestamp())
                     ).toList();
             
-            logger.info("Successfully returning {} cigarette responses", response.size());
+            logger.info("Step 5: Returning response with {} entries", response.size());
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            logger.error("Error fetching cigarettes", e);
+            logger.error("ERROR in CigaretteController.getAll(): {}", e.getMessage(), e);
             throw e;
         }
     }
