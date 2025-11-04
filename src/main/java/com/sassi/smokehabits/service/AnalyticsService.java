@@ -1,9 +1,6 @@
 package com.sassi.smokehabits.service;
 
-import com.sassi.smokehabits.dto.analytics.DailyCigaretteStats;
-import com.sassi.smokehabits.dto.analytics.MonthlyCigaretteStats;
-import com.sassi.smokehabits.dto.analytics.WeeklyCigaretteStats;
-import com.sassi.smokehabits.dto.analytics.Trend;
+import com.sassi.smokehabits.dto.analytics.*;
 import com.sassi.smokehabits.entity.CigaretteEntry;
 import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.repository.CigaretteEntryRepository;
@@ -117,6 +114,11 @@ public class AnalyticsService {
 
         return stats;
     }
+
+    public List<ContextAnalyticsDto> getContextAnalytics(UUID userId) {
+        return cigaretteEntryRepository.findContextAnalyticsByUserId(userId);
+    }
+
 
     public int calculateLongestStreak(UUID userId) {
         List<Instant> dates = getUserEntries(userId).stream()

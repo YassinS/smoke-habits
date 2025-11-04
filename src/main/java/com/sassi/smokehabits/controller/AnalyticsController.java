@@ -1,5 +1,6 @@
 package com.sassi.smokehabits.controller;
 
+import com.sassi.smokehabits.dto.analytics.ContextAnalyticsDto;
 import com.sassi.smokehabits.dto.analytics.DailyCigaretteStats;
 import com.sassi.smokehabits.dto.analytics.MonthlyCigaretteStats;
 import com.sassi.smokehabits.dto.analytics.WeeklyCigaretteStats;
@@ -63,6 +64,14 @@ public class AnalyticsController {
         double avgCraving = analyticsService.getOverallAvgCraving(userId);
         return ResponseEntity.ok(avgCraving);
     }
+
+    @GetMapping("/context")
+    public ResponseEntity<List<ContextAnalyticsDto>> getContextAnalytics(Authentication authentication) {
+        SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        return ResponseEntity.ok(analyticsService.getContextAnalytics(userId));
+    }
+
 
     private UUID getUserId(Authentication authentication) {
         SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();

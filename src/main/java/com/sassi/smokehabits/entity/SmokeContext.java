@@ -16,8 +16,10 @@ public class SmokeContext {
     @JoinColumn(nullable = false)
     private User user;
 
+    @Column(nullable = false, length = 100)
     private String context;
 
+    @Column(length = 10, nullable = false)
     private String colorUI;
 
     public UUID getId() {
