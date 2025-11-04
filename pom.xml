@@ -27,6 +27,7 @@
         <url/>
     </scm>
     <properties>
+        <spring-boot.run.jvmArguments>-Duser.timezone=UTC</spring-boot.run.jvmArguments>
         <java.version>17</java.version>
     </properties>
     <dependencies>

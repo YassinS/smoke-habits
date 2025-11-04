@@ -29,12 +29,10 @@ public class AnalyticsController {
 
     @GetMapping("/daily")
     public ResponseEntity<List<DailyCigaretteStats>> getDailyStats(
-            Authentication authentication,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+            Authentication authentication
     ) {
         UUID userId = getUserId(authentication);
-        List<DailyCigaretteStats> stats = analyticsService.getDailyStats(userId, startDate, endDate);
+        List<DailyCigaretteStats> stats = analyticsService.getDailyStats(userId);
         return ResponseEntity.ok(stats);
     }
 

@@ -10,8 +10,8 @@ import com.sassi.smokehabits.repository.CigaretteEntryRepository;
 import com.sassi.smokehabits.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.YearMonth;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.IsoFields;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,18 +33,11 @@ public class AnalyticsService {
 
     // ----------- PUBLIC METHODS -----------
 
-    public List<DailyCigaretteStats> getDailyStats(UUID userId, LocalDate startDate, LocalDate endDate) {
+    public List<DailyCigaretteStats> getDailyStats(UUID userId) {
         List<CigaretteEntry> entries = getUserEntries(userId);
 
-        if (startDate != null) entries = entries.stream()
-                .filter(e -> !e.getTimestamp().toLocalDate().isBefore(startDate))
-                .toList();
-        if (endDate != null) entries = entries.stream()
-                .filter(e -> !e.getTimestamp().toLocalDate().isAfter(endDate))
-                .toList();
-
-        Map<LocalDate, List<CigaretteEntry>> grouped = entries.stream()
-                .collect(Collectors.groupingBy(e -> e.getTimestamp().toLocalDate()));
+        Map<Instant, List<CigaretteEntry>> grouped = entries.stream()
+                .collect(Collectors.groupingBy(CigaretteEntry::getTimestamp));
 
         List<DailyCigaretteStats> dailyStats = grouped.entrySet().stream()
                 .map(e -> {
@@ -63,13 +56,13 @@ public class AnalyticsService {
 
     public List<WeeklyCigaretteStats> getWeeklyStats(UUID userId) {
         List<CigaretteEntry> entries = getUserEntries(userId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
 
         Map<String, List<CigaretteEntry>> weeklyMap = entries.stream()
                 .collect(Collectors.groupingBy(entry -> {
-                    LocalDate date = entry.getTimestamp().toLocalDate();
-                    int week = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-                    int year = date.getYear();
-                    return year + "-" + week; // e.g., "2025-09"
+                    Instant instantTime = entry.getTimestamp();
+                    return formatter.format(instantTime);
+
                 }));
 
         List<WeeklyCigaretteStats> stats = weeklyMap.entrySet().stream()
@@ -119,8 +112,8 @@ public class AnalyticsService {
     }
 
     public int calculateLongestStreak(UUID userId) {
-        List<LocalDate> dates = getUserEntries(userId).stream()
-                .map(e -> e.getTimestamp().toLocalDate())
+        List<Instant> dates = getUserEntries(userId).stream()
+                .map(e -> e.getTimestamp())
                 .distinct()
                 .sorted()
                 .toList();
@@ -130,7 +123,7 @@ public class AnalyticsService {
         int longest = 1, current = 1;
 
         for (int i = 1; i < dates.size(); i++) {
-            if (dates.get(i).minusDays(1).equals(dates.get(i - 1))) {
+            if (dates.get(i).minusSeconds(24*60*60).equals(dates.get(i - 1))) {
                 current++;
                 longest = Math.max(longest, current);
             } else {

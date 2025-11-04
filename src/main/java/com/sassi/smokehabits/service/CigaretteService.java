@@ -28,7 +28,7 @@ public class CigaretteService {
         User user = userRepository.getUserById(userId);
         logger.debug(user.getId().toString());
         logger.debug(user.getEmail());
-        CigaretteEntry entry = new CigaretteEntry(user, LocalDateTime.now(),  cravingLevel);
+        CigaretteEntry entry = new CigaretteEntry(user,  cravingLevel);
         return repository.save(entry);
     }
 

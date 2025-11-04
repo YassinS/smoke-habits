@@ -51,6 +51,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             logger.info("JWT Filter processing request: {} {}", request.getMethod(), request.getRequestURI());
 
             if (authHeader != null && authHeader.startsWith("Bearer") && context.getAuthentication() == null) {
+                if(authHeader.length() < 32){
+                    throw new BadCredentialsException("Bad credentials");
+                }
                 String token = authHeader.substring(7);
                 logger.info("JWT Filter: Processing Bearer token");
                 
