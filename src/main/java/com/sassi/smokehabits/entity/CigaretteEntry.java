@@ -2,6 +2,7 @@ package com.sassi.smokehabits.entity;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
@@ -15,16 +16,27 @@ public class CigaretteEntry {
     @ManyToOne
     private User user;
 
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     private int cravingLevel;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "context_id")
+    private SmokeContext context;
+
     public CigaretteEntry() {}
 
-    public CigaretteEntry(User user, LocalDateTime timestamp, int cravingLevel) {
+    public CigaretteEntry(User user, int cravingLevel) {
         this.user = user;
-        this.timestamp = timestamp;
+        this.timestamp = Instant.now();
         this.cravingLevel = cravingLevel;
+    }
+
+    public CigaretteEntry(User user, int cravingLevel, SmokeContext context) {
+        this.user = user;
+        this.timestamp = Instant.now();
+        this.cravingLevel = cravingLevel;
+        this.context = context;
     }
 
     public Long getId() {
@@ -39,11 +51,11 @@ public class CigaretteEntry {
         this.user = user;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -54,4 +66,6 @@ public class CigaretteEntry {
     public void setCravingLevel(int cravingLevel) {
         this.cravingLevel = cravingLevel;
     }
+
+
 }
