@@ -20,6 +20,10 @@ public class SmokeContext {
 
     private String colorUI;
 
+    public UUID getId() {
+        return id;
+    }
+
     public User getUser() {
         return user;
     }
@@ -45,6 +49,6 @@ public class SmokeContext {
     }
 
     public SmokeContextResponse toSmokeContextResponse() {
-        return new SmokeContextResponse(context, colorUI);
+        return new SmokeContextResponse(id, context, colorUI);
     }
 }

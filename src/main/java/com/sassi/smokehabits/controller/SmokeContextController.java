@@ -6,6 +6,8 @@ import com.sassi.smokehabits.entity.SmokeContext;
 import com.sassi.smokehabits.repository.SmokeContextRepository;
 import com.sassi.smokehabits.security.SmokeUserDetails;
 import com.sassi.smokehabits.service.SmokeContextService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,8 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/context")
 public class SmokeContextController {
+
+    private static final Logger log = LoggerFactory.getLogger(SmokeContextController.class);
     private final SmokeContextService smokeContextService;
     private final SmokeContextRepository smokeContextRepository;
 
@@ -28,8 +32,15 @@ public class SmokeContextController {
         return smokeContextRepository.findById(UUID.fromString(id)).orElseThrow();
     }
 
+    @PostMapping("/{id}/edit")
+    public SmokeContextResponse editSmokeContext(@PathVariable String id, @RequestBody SmokeContextRequest smokeContextRequest) {
+        SmokeContext smokeContext = smokeContextRepository.findById(UUID.fromString(id)).orElseThrow();
+        log.debug("Now editing {}", smokeContext.getId().toString());
+        return smokeContextService.editSmokeContext(smokeContext, smokeContextRequest);
+    }
+
     @GetMapping
-    public List<SmokeContext> findAll(Authentication authentication) {
+    public List<SmokeContextResponse> findAll(Authentication authentication) {
         SmokeUserDetails userDetails = (SmokeUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
         return smokeContextService.findAllByUUID(userId);
@@ -42,9 +53,5 @@ public class SmokeContextController {
 
         return smokeContextService.createSmokeContext(userId, smokeContextRequest);
     }
-    @PostMapping("/{id}/edit")
-    public SmokeContext editSmokeContext(@PathVariable String id, @RequestBody SmokeContextRequest smokeContextRequest) {
-        SmokeContext smokeContext = smokeContextRepository.findById(UUID.fromString(id)).orElseThrow();
-        return smokeContextService.editSmokeContext(smokeContext, smokeContextRequest);
-    }
+
 }

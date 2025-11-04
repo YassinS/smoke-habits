@@ -20,7 +20,7 @@ public class CigaretteEntry {
 
     private int cravingLevel;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "context_id")
     private SmokeContext context;
 
@@ -67,5 +67,11 @@ public class CigaretteEntry {
         this.cravingLevel = cravingLevel;
     }
 
+    public SmokeContext getContext() {
+        return context;
+    }
 
+    public void setContext(SmokeContext context) {
+        this.context = context;
+    }
 }

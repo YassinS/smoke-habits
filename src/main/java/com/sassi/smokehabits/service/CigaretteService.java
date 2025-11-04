@@ -1,6 +1,7 @@
 package com.sassi.smokehabits.service;
 
 import com.sassi.smokehabits.entity.CigaretteEntry;
+import com.sassi.smokehabits.entity.SmokeContext;
 import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.repository.CigaretteEntryRepository;
 import com.sassi.smokehabits.repository.UserRepository;
@@ -24,6 +25,14 @@ public class CigaretteService {
         this.userRepository = userRepository;
     }
 
+    public CigaretteEntry logCigarette(UUID userId, int cravingLevel, SmokeContext  context) {
+        User user = userRepository.getUserById(userId);
+        logger.debug(user.getId().toString());
+        logger.debug(user.getEmail());
+        CigaretteEntry entry = new CigaretteEntry(user,  cravingLevel, context);
+        return repository.save(entry);
+    }
+
     public CigaretteEntry logCigarette(UUID userId, int cravingLevel) {
         User user = userRepository.getUserById(userId);
         logger.debug(user.getId().toString());
@@ -31,6 +40,8 @@ public class CigaretteService {
         CigaretteEntry entry = new CigaretteEntry(user,  cravingLevel);
         return repository.save(entry);
     }
+
+
 
     public List<CigaretteEntry> getAll(UUID userId) {
         User user = userRepository.getUserById(userId);

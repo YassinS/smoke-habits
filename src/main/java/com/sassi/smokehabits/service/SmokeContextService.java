@@ -24,9 +24,15 @@ public class SmokeContextService {
         this.userRepository = userRepository;
     }
 
-    public List<SmokeContext> findAllByUUID(UUID userId) {
+    public List<SmokeContextResponse> findAllByUUID(UUID userId) {
            User user = userRepository.findById(userId).orElseThrow();
-           return smokeContextRepository.findAllByUser(user);
+           List<SmokeContext> smokeContexts = smokeContextRepository.findAllByUser(user);
+           List<SmokeContextResponse> responses = smokeContexts.stream().map(SmokeContext::toSmokeContextResponse).toList();
+           smokeContexts.forEach(response -> {
+               log.info(response.getId().toString());
+           });
+
+           return responses;
     }
 
     public SmokeContextResponse createSmokeContext(UUID userId, SmokeContextRequest smokeContextRequest) {
@@ -45,11 +51,12 @@ public class SmokeContextService {
 
     }
 
-    public SmokeContext editSmokeContext(SmokeContext smokeContextToEdit,  SmokeContextRequest smokeContextRequest) {
+    public SmokeContextResponse editSmokeContext(SmokeContext smokeContextToEdit,  SmokeContextRequest smokeContextRequest) {
         smokeContextToEdit.setColorUI(smokeContextRequest.getColorUI());
         smokeContextToEdit.setContext(smokeContextRequest.getContext());
+        log.debug("Saving smokeContext changes to DB for smokeContext {}", smokeContextToEdit.getId());
         smokeContextRepository.save(smokeContextToEdit);
-        return smokeContextToEdit;
+        return smokeContextToEdit.toSmokeContextResponse();
     }
 
 

@@ -6,10 +6,20 @@ import java.time.LocalDateTime;
 public class CigaretteResponse {
     private long id;
     private Instant timestamp;
+    private int cravingLevel;
+    private SmokeContextResponse contextResponse;
 
-    public CigaretteResponse(long id, Instant timestamp) {
+    public CigaretteResponse(long id, Instant timestamp,int cravingLevel, SmokeContextResponse contextResponse) {
         this.id = id;
         this.timestamp = timestamp;
+        this.cravingLevel = cravingLevel;
+        this.contextResponse = contextResponse;
+    }
+
+    public CigaretteResponse(long id, Instant timestamp, int cravingLevel) {
+        this.id = id;
+        this.timestamp = timestamp;
+        this.cravingLevel = cravingLevel;
     }
 
     public CigaretteResponse() {
@@ -25,5 +35,21 @@ public class CigaretteResponse {
 
     public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public int getCravingLevel() {
+        return cravingLevel;
+    }
+
+    public void setCravingLevel(int cravingLevel) {
+        this.cravingLevel = cravingLevel;
+    }
+
+    public SmokeContextResponse getContextResponse() {
+        return contextResponse;
+    }
+
+    public void setContextResponse(SmokeContextResponse contextResponse) {
+        this.contextResponse = contextResponse;
     }
 }
