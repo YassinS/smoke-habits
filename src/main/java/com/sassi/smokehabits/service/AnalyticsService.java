@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.IsoFields;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,14 +35,18 @@ public class AnalyticsService {
     public List<DailyCigaretteStats> getDailyStats(UUID userId) {
         List<CigaretteEntry> entries = getUserEntries(userId);
 
-        Map<Instant, List<CigaretteEntry>> grouped = entries.stream()
-                .collect(Collectors.groupingBy(CigaretteEntry::getTimestamp));
+        Map<LocalDate, List<CigaretteEntry>> grouped = entries.stream()
+                .collect(Collectors.groupingBy(e -> {
+                    LocalDateTime localDateTime = LocalDateTime.ofInstant(e.getTimestamp(), ZoneOffset.UTC);
+                    return localDateTime.toLocalDate();
+                }));
 
         List<DailyCigaretteStats> dailyStats = grouped.entrySet().stream()
                 .map(e -> {
                     List<CigaretteEntry> list = e.getValue();
                     double avgCraving = list.stream().mapToInt(CigaretteEntry::getCravingLevel).average().orElse(0);
-                    return new DailyCigaretteStats(e.getKey(), list.size(), avgCraving);
+                    Instant dayInstant = e.getKey().atStartOfDay().toInstant(ZoneOffset.UTC);
+                    return new DailyCigaretteStats(dayInstant, list.size(), avgCraving);
                 })
                 .sorted(Comparator.comparing(DailyCigaretteStats::getDay))
                 .toList();
@@ -61,7 +64,8 @@ public class AnalyticsService {
         Map<String, List<CigaretteEntry>> weeklyMap = entries.stream()
                 .collect(Collectors.groupingBy(entry -> {
                     Instant instantTime = entry.getTimestamp();
-                    return formatter.format(instantTime);
+                    LocalDateTime localDateTime = LocalDateTime.ofInstant(instantTime, ZoneId.systemDefault());
+                    return formatter.format(localDateTime);
 
                 }));
 
@@ -91,7 +95,10 @@ public class AnalyticsService {
         List<CigaretteEntry> entries = getUserEntries(userId);
 
         Map<YearMonth, List<CigaretteEntry>> grouped = entries.stream()
-                .collect(Collectors.groupingBy(e -> YearMonth.from(e.getTimestamp())));
+                .collect(Collectors.groupingBy(e -> {
+                    LocalDateTime localDateTime = LocalDateTime.ofInstant(e.getTimestamp(), ZoneId.systemDefault());
+                    return YearMonth.from(localDateTime);
+                }));
 
         List<MonthlyCigaretteStats> stats = grouped.entrySet().stream()
                 .map(entry -> {
@@ -113,7 +120,7 @@ public class AnalyticsService {
 
     public int calculateLongestStreak(UUID userId) {
         List<Instant> dates = getUserEntries(userId).stream()
-                .map(e -> e.getTimestamp())
+                .map(CigaretteEntry::getTimestamp)
                 .distinct()
                 .sorted()
                 .toList();
