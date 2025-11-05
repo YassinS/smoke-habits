@@ -16,7 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/me")
 public class MeController {
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public MeController(UserRepository userRepository) {
         this.userRepository = userRepository;
