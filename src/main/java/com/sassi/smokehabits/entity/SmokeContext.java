@@ -13,7 +13,7 @@ public class SmokeContext {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(nullable = false, name = "user_id")
     private User user;
 
     @Column(nullable = false, length = 100)

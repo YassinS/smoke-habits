@@ -3,7 +3,8 @@ package com.sassi.smokehabits.entity;
 import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -25,6 +26,15 @@ public class User {
 
     @Column(nullable = false)
     private boolean consent = false;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CigaretteEntry> cigaretteEntries = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SmokeContext> smokeContexts = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<RefreshToken> refreshTokens = new HashSet<>();
 
     public User() {
         this.createdAt = Instant.now();
@@ -83,5 +93,29 @@ public class User {
 
     public void setConsent(boolean consent) {
         this.consent = consent;
+    }
+
+    public Set<CigaretteEntry> getCigaretteEntries() {
+        return cigaretteEntries;
+    }
+
+    public void setCigaretteEntries(Set<CigaretteEntry> cigaretteEntries) {
+        this.cigaretteEntries = cigaretteEntries;
+    }
+
+    public Set<SmokeContext> getSmokeContexts() {
+        return smokeContexts;
+    }
+
+    public void setSmokeContexts(Set<SmokeContext> smokeContexts) {
+        this.smokeContexts = smokeContexts;
+    }
+
+    public Set<RefreshToken> getRefreshTokens() {
+        return refreshTokens;
+    }
+
+    public void setRefreshTokens(Set<RefreshToken> refreshTokens) {
+        this.refreshTokens = refreshTokens;
     }
 }
