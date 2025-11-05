@@ -28,8 +28,8 @@ public class SmokeContextController {
     }
 
     @GetMapping("/{id}")
-    public SmokeContext getSmokeContext(@PathVariable String id) {
-        return smokeContextRepository.findById(UUID.fromString(id)).orElseThrow();
+    public SmokeContextResponse getSmokeContext(@PathVariable String id) {
+        return smokeContextRepository.findById(UUID.fromString(id)).orElseThrow().toSmokeContextResponse();
     }
 
     @PostMapping("/{id}/edit")

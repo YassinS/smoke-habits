@@ -1,6 +1,7 @@
 package com.sassi.smokehabits.advice;
 
 import com.sassi.smokehabits.exception.InvalidTokenException;
+import com.sassi.smokehabits.exception.NoConsentException;
 import com.sassi.smokehabits.exception.TokenExpiredException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +27,15 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<?> handleNotFound(Exception ex) {
+    public ResponseEntity<?> handleNotFound(NoResourceFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Resource not found"));
+    }
+
+    @ExceptionHandler(NoConsentException.class)
+    public ResponseEntity<?> handleNoConsent(NoConsentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(Map.of("error", "You must consent before registering"));
     }
 
     @ExceptionHandler(Exception.class)

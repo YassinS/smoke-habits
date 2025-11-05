@@ -1,6 +1,8 @@
 package com.sassi.smokehabits.entity;
 
 import jakarta.persistence.*;
+
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -19,22 +21,26 @@ public class User {
     private String hashedPassword;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
+    @Column(nullable = false)
+    private boolean consent = false;
 
     public User() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 
-    public User(String email, String hashedPassword) {
+    public User(String email, String hashedPassword, boolean consent) {
         this.email = email;
         this.hashedPassword = hashedPassword;
-        this.createdAt = LocalDateTime.now();
+        this.consent = consent;
+        this.createdAt = Instant.now();
     }
 
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = Instant.now();
         }
     }
 
@@ -63,11 +69,19 @@ public class User {
         this.hashedPassword = hashedPassword;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public boolean isConsent() {
+        return consent;
+    }
+
+    public void setConsent(boolean consent) {
+        this.consent = consent;
     }
 }

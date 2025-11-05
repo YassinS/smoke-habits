@@ -6,6 +6,7 @@ import com.sassi.smokehabits.dto.security.response.TokenResponse;
 import com.sassi.smokehabits.entity.RefreshToken;
 import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.exception.AuthenticationError;
+import com.sassi.smokehabits.exception.NoConsentException;
 import com.sassi.smokehabits.repository.UserRepository;
 import com.sassi.smokehabits.security.service.RefreshTokenService;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,10 @@ public class AuthService {
             throw new RuntimeException("User already exists");
         }
         String hashed = passwordEncoder.encode(request.getPassword());
-        User user = new User(request.getEmail(), hashed);
+        User user = new User(request.getEmail(), hashed, request.isConsent());
+        if(!request.isConsent()) {
+            throw new NoConsentException("You must consent before registering");
+        }
         userRepository.save(user);
         String token = jwtService.generateToken(user.getEmail());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
