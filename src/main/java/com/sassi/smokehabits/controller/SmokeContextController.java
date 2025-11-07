@@ -33,7 +33,7 @@ public class SmokeContextController {
 
     @GetMapping("/{id}")
     public SmokeContextResponse getSmokeContext(@PathVariable String id) {
-        return smokeContextService.getById(UUID.fromString(id));
+        return smokeContextService.findById(UUID.fromString(id));
     }
 
     @PostMapping("/{id}/edit")
