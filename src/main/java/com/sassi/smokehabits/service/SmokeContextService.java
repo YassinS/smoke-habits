@@ -9,10 +9,8 @@ import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.repository.CigaretteEntryRepository;
 import com.sassi.smokehabits.repository.SmokeContextRepository;
 import com.sassi.smokehabits.repository.UserRepository;
-
 import java.util.List;
 import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,16 +22,16 @@ import org.springframework.stereotype.Service;
 public class SmokeContextService {
 
     private static final Logger log = LoggerFactory.getLogger(
-            SmokeContextService.class
+        SmokeContextService.class
     );
     private final SmokeContextRepository smokeContextRepository;
     private final UserRepository userRepository;
     private final CigaretteEntryRepository cigaretteEntryRepository;
 
     public SmokeContextService(
-            SmokeContextRepository smokeContextRepository,
-            UserRepository userRepository,
-            CigaretteEntryRepository cigaretteEntryRepository
+        SmokeContextRepository smokeContextRepository,
+        UserRepository userRepository,
+        CigaretteEntryRepository cigaretteEntryRepository
     ) {
         this.smokeContextRepository = smokeContextRepository;
         this.userRepository = userRepository;
@@ -45,37 +43,35 @@ public class SmokeContextService {
         log.debug("Fetching all smoke contexts for user: {}", userId);
         User user = userRepository.findById(userId).orElseThrow();
         List<SmokeContext> smokeContexts = smokeContextRepository.findAllByUser(
-                user
+            user
         );
 
         List<SmokeContextResponse> responses = smokeContexts
-                .stream()
-                .map(SmokeContext::toSmokeContextResponse)
-                .toList();
+            .stream()
+            .map(SmokeContext::toSmokeContextResponse)
+            .toList();
 
         log.debug(
-                "Found {} smoke contexts for user: {}",
-                responses.size(),
-                userId
+            "Found {} smoke contexts for user: {}",
+            responses.size(),
+            userId
         );
         return responses;
     }
-
 
     @Cacheable(value = "smokeContext", key = "#contextId")
     public SmokeContextResponse findById(UUID contextId) {
         log.debug("Fetching smoke context: {}", contextId);
         SmokeContext smokeContext = smokeContextRepository
-                .findById(contextId)
-                .orElseThrow();
+            .findById(contextId)
+            .orElseThrow();
         return smokeContext.toSmokeContextResponse();
     }
 
-
     @CacheEvict(value = "smokeContexts", key = "#userId")
     public SmokeContextResponse createSmokeContext(
-            UUID userId,
-            SmokeContextRequest smokeContextRequest
+        UUID userId,
+        SmokeContextRequest smokeContextRequest
     ) {
         log.debug("Creating new smoke context for user: {}", userId);
         User user = userRepository.findById(userId).orElseThrow();
@@ -91,26 +87,25 @@ public class SmokeContextService {
         return savedContext.toSmokeContextResponse();
     }
 
-
     @Caching(
-            evict = {
-                    @CacheEvict(value = "smokeContext", key = "#smokeContextToEdit.id"),
-                    @CacheEvict(
-                            value = "smokeContexts",
-                            key = "#smokeContextToEdit.user.id"
-                    ),
-            }
+        evict = {
+            @CacheEvict(value = "smokeContext", key = "#smokeContextToEdit.id"),
+            @CacheEvict(
+                value = "smokeContexts",
+                key = "#smokeContextToEdit.user.id"
+            ),
+        }
     )
     public SmokeContextResponse editSmokeContext(
-            SmokeContext smokeContextToEdit,
-            SmokeContextRequest smokeContextRequest
+        SmokeContext smokeContextToEdit,
+        SmokeContextRequest smokeContextRequest
     ) {
         log.debug("Editing smoke context: {}", smokeContextToEdit.getId());
         smokeContextToEdit.setColorUI(smokeContextRequest.getColorUI());
         smokeContextToEdit.setContext(smokeContextRequest.getContext());
 
         SmokeContext savedContext = smokeContextRepository.save(
-                smokeContextToEdit
+            smokeContextToEdit
         );
         log.debug("Smoke context saved: {}", smokeContextToEdit.getId());
 
@@ -118,49 +113,51 @@ public class SmokeContextService {
     }
 
     @Caching(
-            evict = {
-                    @CacheEvict(value = "smokeContext", key = "#contextId"),
-                    @CacheEvict(value = "smokeContexts", key = "#userId"),
-                    @CacheEvict(value = "cigarettes", key = "#userId"),
-                    @CacheEvict(value = "cigaretteResponses", key = "#userId")
-            }
+        evict = {
+            @CacheEvict(value = "smokeContext", key = "#contextId"),
+            @CacheEvict(value = "smokeContexts", key = "#userId"),
+            @CacheEvict(value = "cigarettes", key = "#userId"),
+            @CacheEvict(value = "cigaretteResponses", key = "#userId"),
+        }
     )
     public void deleteSmokeContext(UUID contextId, UUID userId) {
         log.debug(
-                "Attempting to delete smoke context: {} for user: {}",
-                contextId,
-                userId
+            "Attempting to delete smoke context: {} for user: {}",
+            contextId,
+            userId
         );
 
-        User user = userRepository.findById(userId).orElseThrow();
         SmokeContext contextToDelete =
-                smokeContextRepository.findSmokeContextByIdAndUser(contextId, user);
+            smokeContextRepository.findSmokeContextByIdAndUser(
+                contextId,
+                userId
+            );
 
         if (contextToDelete == null) {
             log.warn(
-                    "Smoke context {} not found or does not belong to user: {}",
-                    contextId,
-                    userId
+                "Smoke context {} not found or does not belong to user: {}",
+                contextId,
+                userId
             );
             throw new AuthenticationError("Smoke context not found");
         }
 
         // Find all cigarette entries that reference this context
         List<CigaretteEntry> cigarettesWithContext =
-                cigaretteEntryRepository.findAllByContext(contextToDelete);
+            cigaretteEntryRepository.findAllByContext(contextToDelete);
 
         if (!cigarettesWithContext.isEmpty()) {
             log.debug(
-                    "Found {} cigarette entries referencing context: {}, nullifying references",
-                    cigarettesWithContext.size(),
-                    contextId
+                "Found {} cigarette entries referencing context: {}, nullifying references",
+                cigarettesWithContext.size(),
+                contextId
             );
             // Nullify the context reference for all cigarette entries
             cigarettesWithContext.forEach(entry -> entry.setContext(null));
             cigaretteEntryRepository.saveAll(cigarettesWithContext);
             log.debug(
-                    "Nullified context references for {} cigarette entries",
-                    cigarettesWithContext.size()
+                "Nullified context references for {} cigarette entries",
+                cigarettesWithContext.size()
             );
         }
 

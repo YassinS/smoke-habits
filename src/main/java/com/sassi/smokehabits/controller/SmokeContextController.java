@@ -1,6 +1,5 @@
 package com.sassi.smokehabits.controller;
 
-import com.sassi.smokehabits.dto.request.SmokeContextDeletionRequest;
 import com.sassi.smokehabits.dto.request.SmokeContextRequest;
 import com.sassi.smokehabits.dto.response.SmokeContextDeletionResponse;
 import com.sassi.smokehabits.dto.response.SmokeContextResponse;
@@ -9,6 +8,7 @@ import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.repository.SmokeContextRepository;
 import com.sassi.smokehabits.security.SmokeUserDetails;
 import com.sassi.smokehabits.service.SmokeContextService;
+import com.sassi.smokehabits.validation.ValidationUtils;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -38,7 +38,8 @@ public class SmokeContextController {
 
     @GetMapping("/{id}")
     public SmokeContextResponse getSmokeContext(@PathVariable String id) {
-        return smokeContextService.findById(UUID.fromString(id));
+        String validatedId = ValidationUtils.validateUUID(id);
+        return smokeContextService.findById(UUID.fromString(validatedId));
     }
 
     @PostMapping("/{id}/edit")
@@ -46,10 +47,27 @@ public class SmokeContextController {
         @PathVariable String id,
         @RequestBody SmokeContextRequest smokeContextRequest
     ) {
+        String validatedId = ValidationUtils.validateUUID(id);
+        UUID contextId = UUID.fromString(validatedId);
+
+        String validatedLabel = ValidationUtils.validateAndSanitizeContextLabel(
+            smokeContextRequest.getContext()
+        );
+        String validatedColor = ValidationUtils.validateAndSanitizeHexColor(
+            smokeContextRequest.getColorUI()
+        );
+
         SmokeContext smokeContext = smokeContextRepository
-            .findById(UUID.fromString(id))
-            .orElseThrow();
-        log.debug("Editing context {}", smokeContext.getId());
+            .findById(contextId)
+            .orElseThrow(() ->
+                new AuthenticationError("Smoke context not found")
+            );
+
+        log.debug("Editing context {}", contextId);
+
+        smokeContextRequest.setContext(validatedLabel);
+        smokeContextRequest.setColorUI(validatedColor);
+
         return smokeContextService.editSmokeContext(
             smokeContext,
             smokeContextRequest
@@ -69,9 +87,20 @@ public class SmokeContextController {
         Authentication authentication,
         @RequestBody SmokeContextRequest smokeContextRequest
     ) {
+        String validatedLabel = ValidationUtils.validateAndSanitizeContextLabel(
+            smokeContextRequest.getContext()
+        );
+        String validatedColor = ValidationUtils.validateAndSanitizeHexColor(
+            smokeContextRequest.getColorUI()
+        );
+
         SmokeUserDetails userDetails =
             (SmokeUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
+
+        smokeContextRequest.setContext(validatedLabel);
+        smokeContextRequest.setColorUI(validatedColor);
+
         return smokeContextService.createSmokeContext(
             userId,
             smokeContextRequest
@@ -83,14 +112,16 @@ public class SmokeContextController {
         Authentication authentication,
         @PathVariable String id
     ) {
+        String validatedId = ValidationUtils.validateUUID(id);
+        UUID contextId = UUID.fromString(validatedId);
+
         SmokeUserDetails userDetails =
             (SmokeUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
-        UUID contextId = UUID.fromString(id);
 
         try {
             smokeContextService.deleteSmokeContext(contextId, userId);
-            log.debug("Smoke context deleted: {}", contextId);
+            log.info("Smoke context deleted: {}", contextId);
             return ResponseEntity.ok(
                 new SmokeContextDeletionResponse(
                     true,
@@ -102,7 +133,7 @@ public class SmokeContextController {
             SmokeContextDeletionResponse response =
                 new SmokeContextDeletionResponse(
                     false,
-                    "Smoke context not found"
+                    "Unauthorized: " + ex.getMessage()
                 );
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }

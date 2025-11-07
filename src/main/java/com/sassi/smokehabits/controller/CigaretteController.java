@@ -3,11 +3,12 @@ package com.sassi.smokehabits.controller;
 import com.sassi.smokehabits.dto.request.LogCigaretteRequest;
 import com.sassi.smokehabits.dto.response.CigaretteResponse;
 import com.sassi.smokehabits.entity.SmokeContext;
+import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.repository.SmokeContextRepository;
 import com.sassi.smokehabits.security.SmokeUserDetails;
 import com.sassi.smokehabits.service.CigaretteService;
+import com.sassi.smokehabits.validation.ValidationUtils;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,26 +43,42 @@ public class CigaretteController {
             (SmokeUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
 
+        int cravingLevel = ValidationUtils.validateCravingLevel(
+            logRequestBody.getCravingLevel()
+        );
+
         CigaretteResponse response;
+
         if (logRequestBody.getSmokeContext() != null) {
-            Optional<SmokeContext> context = smokeContextRepository.findById(
-                logRequestBody.getSmokeContext()
+            String contextIdStr = ValidationUtils.validateUUID(
+                logRequestBody.getSmokeContext().toString()
             );
-            response = context.isPresent()
-                ? cigaretteService.logCigarette(
-                      userId,
-                      logRequestBody.getCravingLevel(),
-                      context.get()
-                  )
-                : cigaretteService.logCigarette(
-                      userId,
-                      logRequestBody.getCravingLevel()
-                  );
-        } else {
+            UUID contextId = UUID.fromString(contextIdStr);
+
+            SmokeContext context =
+                smokeContextRepository.findSmokeContextByIdAndUser(
+                    contextId,
+                    userId
+                );
+
+            if (context == null) {
+                logger.warn(
+                    "User {} attempted to use smoke context {} that does not belong to them or does not exist",
+                    userId,
+                    contextId
+                );
+                throw new AuthenticationError(
+                    "Smoke context not found"
+                );
+            }
+
             response = cigaretteService.logCigarette(
                 userId,
-                logRequestBody.getCravingLevel()
+                cravingLevel,
+                context
             );
+        } else {
+            response = cigaretteService.logCigarette(userId, cravingLevel);
         }
 
         logger.info("Cigarette logged for user: {}", userId);

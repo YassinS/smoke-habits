@@ -1,49 +1,49 @@
 package com.sassi.smokehabits.advice;
 
-import com.sassi.smokehabits.exception.InvalidTokenException;
-import com.sassi.smokehabits.exception.NoConsentException;
-import com.sassi.smokehabits.exception.TokenExpiredException;
+import com.sassi.smokehabits.dto.response.ValidationErrorResponse;
+import com.sassi.smokehabits.exception.AuthenticationError;
+import com.sassi.smokehabits.exception.ValidationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(TokenExpiredException.class)
-    public ResponseEntity<?> handleTokenExpired(TokenExpiredException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", ex.getMessage()));
+    private static final Logger log = LoggerFactory.getLogger(
+        GlobalExceptionHandler.class
+    );
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<ValidationErrorResponse> handleValidationException(
+        ValidationException ex
+    ) {
+        log.warn("Validation error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            new ValidationErrorResponse(ex.getMessage())
+        );
     }
 
-    @ExceptionHandler(InvalidTokenException.class)
-    public ResponseEntity<?> handleInvalidToken(InvalidTokenException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", ex.getMessage()));
-    }
-
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<?> handleNotFound(NoResourceFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "Resource not found"));
-    }
-
-    @ExceptionHandler(NoConsentException.class)
-    public ResponseEntity<?> handleNoConsent(NoConsentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", "You must consent before registering"));
+    @ExceptionHandler(AuthenticationError.class)
+    public ResponseEntity<ValidationErrorResponse> handleAuthenticationError(
+        AuthenticationError ex
+    ) {
+        log.warn("Authentication error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            new ValidationErrorResponse(ex.getMessage())
+        );
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleOtherExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Unexpected error occurred"));
+    public ResponseEntity<ValidationErrorResponse> handleGenericException(
+        Exception ex
+    ) {
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+            new ValidationErrorResponse("An unexpected error occurred")
+        );
     }
-
-
 }
-
