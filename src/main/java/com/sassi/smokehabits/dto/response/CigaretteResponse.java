@@ -1,15 +1,23 @@
 package com.sassi.smokehabits.dto.response;
 
+import java.io.Serializable;
 import java.time.Instant;
-import java.time.LocalDateTime;
 
-public class CigaretteResponse {
+public class CigaretteResponse implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private long id;
     private Instant timestamp;
     private int cravingLevel;
     private SmokeContextResponse contextResponse;
 
-    public CigaretteResponse(long id, Instant timestamp,int cravingLevel, SmokeContextResponse contextResponse) {
+    public CigaretteResponse(
+        long id,
+        Instant timestamp,
+        int cravingLevel,
+        SmokeContextResponse contextResponse
+    ) {
         this.id = id;
         this.timestamp = timestamp;
         this.cravingLevel = cravingLevel;
@@ -22,8 +30,7 @@ public class CigaretteResponse {
         this.cravingLevel = cravingLevel;
     }
 
-    public CigaretteResponse() {
-    }
+    public CigaretteResponse() {}
 
     public long getId() {
         return id;

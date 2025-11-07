@@ -1,8 +1,12 @@
 package com.sassi.smokehabits.dto.response;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class SmokeContextResponse {
+public class SmokeContextResponse implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private UUID id;
     private String context;
     private String colorUI;
@@ -12,6 +16,8 @@ public class SmokeContextResponse {
         this.context = context;
         this.colorUI = colorUI;
     }
+
+    public SmokeContextResponse() {}
 
     public UUID getId() {
         return id;
