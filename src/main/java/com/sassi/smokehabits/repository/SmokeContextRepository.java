@@ -9,4 +9,6 @@ import java.util.UUID;
 
 public interface SmokeContextRepository extends CrudRepository<SmokeContext, UUID> {
     public List<SmokeContext> findAllByUser(User user);
+
+    public SmokeContext findSmokeContextByIdAndUser(UUID id, User user);
 }
