@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,7 +31,17 @@ public class CigaretteService {
         this.userRepository = userRepository;
     }
 
-    @CacheEvict(value = "cigaretteResponses", key = "#userId")
+    @Caching(
+        evict = {
+            @CacheEvict(value = "cigaretteResponses", key = "#userId"),
+            @CacheEvict(value = "analytics:daily", key = "#userId"),
+            @CacheEvict(value = "analytics:weekly", key = "#userId"),
+            @CacheEvict(value = "analytics:monthly", key = "#userId"),
+            @CacheEvict(value = "analytics:context", key = "#userId"),
+            @CacheEvict(value = "analytics:longestStreak", key = "#userId"),
+            @CacheEvict(value = "analytics:avgCraving", key = "#userId"),
+        }
+    )
     public CigaretteResponse logCigarette(
         UUID userId,
         int cravingLevel,
@@ -47,7 +58,17 @@ public class CigaretteService {
         return mapToResponse(savedEntry);
     }
 
-    @CacheEvict(value = "cigaretteResponses", key = "#userId")
+    @Caching(
+        evict = {
+            @CacheEvict(value = "cigaretteResponses", key = "#userId"),
+            @CacheEvict(value = "analytics:daily", key = "#userId"),
+            @CacheEvict(value = "analytics:weekly", key = "#userId"),
+            @CacheEvict(value = "analytics:monthly", key = "#userId"),
+            @CacheEvict(value = "analytics:context", key = "#userId"),
+            @CacheEvict(value = "analytics:longestStreak", key = "#userId"),
+            @CacheEvict(value = "analytics:avgCraving", key = "#userId"),
+        }
+    )
     public CigaretteResponse logCigarette(UUID userId, int cravingLevel) {
         User user = userRepository.getUserById(userId);
         logger.debug("Logging cigarette for user: {}", user.getId());
@@ -85,12 +106,10 @@ public class CigaretteService {
         return responses;
     }
 
-
     public List<CigaretteEntry> getAllEntities(UUID userId) {
         User user = userRepository.getUserById(userId);
         return repository.findAllByUserOrderByTimestampDesc(user);
     }
-
 
     private CigaretteResponse mapToResponse(CigaretteEntry entry) {
         SmokeContextResponse contextResponse = null;
