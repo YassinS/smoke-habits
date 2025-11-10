@@ -80,7 +80,7 @@ public class AnalyticsService {
     @Cacheable(value = "analytics:weekly", key = "#userId")
     public List<WeeklyCigaretteStats> getWeeklyStats(UUID userId) {
         List<CigaretteEntry> entries = getUserEntries(userId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-ww");
 
         Map<String, List<CigaretteEntry>> weeklyMap = entries
             .stream()
