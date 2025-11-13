@@ -3,6 +3,7 @@ package com.sassi.smokehabits.advice;
 import com.sassi.smokehabits.dto.response.ValidationErrorResponse;
 import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.exception.ValidationException;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,16 @@ public class GlobalExceptionHandler {
         log.warn("Authentication error: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
             new ValidationErrorResponse(ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ValidationErrorResponse> handleExpiredJwtException(
+        ExpiredJwtException ex
+    ) {
+        log.warn("JWT token has expired: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+            new ValidationErrorResponse("JWT token has expired")
         );
     }
 
