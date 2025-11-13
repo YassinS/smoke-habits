@@ -1,7 +1,10 @@
 package com.sassi.smokehabits.service;
 
+import com.sassi.smokehabits.dto.kafka.UserDeletedEvent;
+import com.sassi.smokehabits.dto.kafka.UserRegisteredEvent;
 import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.repository.UserRepository;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -17,19 +20,23 @@ public class UserService {
     );
     private final UserRepository userRepository;
     private final CacheManager cacheManager;
+    private final KafkaProducerService kafkaProducerService;
 
     public UserService(
         UserRepository userRepository,
-        CacheManager cacheManager
+        CacheManager cacheManager,
+        KafkaProducerService kafkaProducerService
     ) {
         this.userRepository = userRepository;
         this.cacheManager = cacheManager;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     public void deleteUser(UUID userId) {
         log.info("Initiating user deletion for user: {}", userId);
 
         User user = userRepository.getUserById(userId);
+        String userEmail = user.getEmail();
 
         // Clear all user-related caches
         clearUserCaches(userId);
@@ -37,6 +44,14 @@ public class UserService {
         // Delete the user
         userRepository.delete(user);
         log.info("User deleted successfully: {}", userId);
+
+        // Publish event to Kafka for analytics service
+        UserDeletedEvent event = new UserDeletedEvent(
+            userId,
+            userEmail,
+            Instant.now()
+        );
+        kafkaProducerService.publishUserDeletedEvent(event);
     }
 
     private void clearUserCaches(UUID userId) {

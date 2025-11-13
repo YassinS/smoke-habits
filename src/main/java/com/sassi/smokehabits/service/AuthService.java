@@ -1,15 +1,17 @@
 package com.sassi.smokehabits.service;
 
+import com.sassi.smokehabits.dto.kafka.UserRegisteredEvent;
 import com.sassi.smokehabits.dto.security.request.LoginRequest;
 import com.sassi.smokehabits.dto.security.request.RegisterRequest;
 import com.sassi.smokehabits.dto.security.response.TokenResponse;
 import com.sassi.smokehabits.entity.RefreshToken;
 import com.sassi.smokehabits.entity.User;
 import com.sassi.smokehabits.exception.AuthenticationError;
+import com.sassi.smokehabits.exception.ValidationException;
 import com.sassi.smokehabits.repository.UserRepository;
 import com.sassi.smokehabits.security.service.RefreshTokenService;
-import com.sassi.smokehabits.exception.ValidationException;
 import com.sassi.smokehabits.validation.ValidationUtils;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,15 +28,18 @@ public class AuthService {
     private final BCryptPasswordEncoder passwordEncoder =
         new BCryptPasswordEncoder();
     private final RefreshTokenService refreshTokenService;
+    private final KafkaProducerService kafkaProducerService;
 
     public AuthService(
         UserRepository userRepository,
         JwtService jwtService,
-        RefreshTokenService refreshTokenService
+        RefreshTokenService refreshTokenService,
+        KafkaProducerService kafkaProducerService
     ) {
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     public TokenResponse register(RegisterRequest request) {
@@ -59,6 +64,14 @@ public class AuthService {
         userRepository.save(user);
 
         log.info("User registered successfully: {}", validatedEmail);
+
+        // Publish event to Kafka for analytics service
+        UserRegisteredEvent event = new UserRegisteredEvent(
+            user.getId(),
+            user.getEmail(),
+            Instant.now()
+        );
+        kafkaProducerService.publishUserRegisteredEvent(event);
 
         String token = jwtService.generateToken(user.getEmail());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(

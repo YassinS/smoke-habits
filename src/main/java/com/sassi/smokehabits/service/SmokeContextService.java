@@ -1,5 +1,8 @@
 package com.sassi.smokehabits.service;
 
+import com.sassi.smokehabits.dto.kafka.SmokeContextCreatedEvent;
+import com.sassi.smokehabits.dto.kafka.SmokeContextDeletedEvent;
+import com.sassi.smokehabits.dto.kafka.SmokeContextUpdatedEvent;
 import com.sassi.smokehabits.dto.request.SmokeContextRequest;
 import com.sassi.smokehabits.dto.response.SmokeContextResponse;
 import com.sassi.smokehabits.entity.CigaretteEntry;
@@ -9,6 +12,7 @@ import com.sassi.smokehabits.exception.AuthenticationError;
 import com.sassi.smokehabits.repository.CigaretteEntryRepository;
 import com.sassi.smokehabits.repository.SmokeContextRepository;
 import com.sassi.smokehabits.repository.UserRepository;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -27,15 +31,18 @@ public class SmokeContextService {
     private final SmokeContextRepository smokeContextRepository;
     private final UserRepository userRepository;
     private final CigaretteEntryRepository cigaretteEntryRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     public SmokeContextService(
         SmokeContextRepository smokeContextRepository,
         UserRepository userRepository,
-        CigaretteEntryRepository cigaretteEntryRepository
+        CigaretteEntryRepository cigaretteEntryRepository,
+        KafkaProducerService kafkaProducerService
     ) {
         this.smokeContextRepository = smokeContextRepository;
         this.userRepository = userRepository;
         this.cigaretteEntryRepository = cigaretteEntryRepository;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Cacheable(value = "smokeContexts", key = "#userId")
@@ -84,6 +91,16 @@ public class SmokeContextService {
         SmokeContext savedContext = smokeContextRepository.save(smokeContext);
         log.debug("Smoke context created with ID: {}", savedContext.getId());
 
+        // Publish event to Kafka for analytics service
+        SmokeContextCreatedEvent event = new SmokeContextCreatedEvent(
+            savedContext.getId(),
+            userId,
+            savedContext.getContext(),
+            savedContext.getColorUI(),
+            Instant.now()
+        );
+        kafkaProducerService.publishSmokeContextCreatedEvent(event);
+
         return savedContext.toSmokeContextResponse();
     }
 
@@ -101,6 +118,11 @@ public class SmokeContextService {
         SmokeContextRequest smokeContextRequest
     ) {
         log.debug("Editing smoke context: {}", smokeContextToEdit.getId());
+
+        // Store old values for event
+        String oldContextLabel = smokeContextToEdit.getContext();
+        String oldColorUI = smokeContextToEdit.getColorUI();
+
         smokeContextToEdit.setColorUI(smokeContextRequest.getColorUI());
         smokeContextToEdit.setContext(smokeContextRequest.getContext());
 
@@ -108,6 +130,18 @@ public class SmokeContextService {
             smokeContextToEdit
         );
         log.debug("Smoke context saved: {}", smokeContextToEdit.getId());
+
+        // Publish event to Kafka for analytics service
+        SmokeContextUpdatedEvent event = new SmokeContextUpdatedEvent(
+            savedContext.getId(),
+            savedContext.getUser().getId(),
+            oldContextLabel,
+            savedContext.getContext(),
+            oldColorUI,
+            savedContext.getColorUI(),
+            Instant.now()
+        );
+        kafkaProducerService.publishSmokeContextUpdatedEvent(event);
 
         return savedContext.toSmokeContextResponse();
     }
@@ -142,6 +176,10 @@ public class SmokeContextService {
             throw new AuthenticationError("Smoke context not found");
         }
 
+        // Store context details for event before deletion
+        String contextLabel = contextToDelete.getContext();
+        String colorUI = contextToDelete.getColorUI();
+
         // Find all cigarette entries that reference this context
         List<CigaretteEntry> cigarettesWithContext =
             cigaretteEntryRepository.findAllByContext(contextToDelete);
@@ -163,5 +201,15 @@ public class SmokeContextService {
 
         smokeContextRepository.deleteById(contextId);
         log.info("Smoke context deleted successfully: {}", contextId);
+
+        // Publish event to Kafka for analytics service
+        SmokeContextDeletedEvent event = new SmokeContextDeletedEvent(
+            contextId,
+            userId,
+            contextLabel,
+            colorUI,
+            Instant.now()
+        );
+        kafkaProducerService.publishSmokeContextDeletedEvent(event);
     }
 }

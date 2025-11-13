@@ -1,5 +1,6 @@
 package com.sassi.smokehabits.service;
 
+import com.sassi.smokehabits.dto.kafka.CigaretteLoggedEvent;
 import com.sassi.smokehabits.dto.response.CigaretteResponse;
 import com.sassi.smokehabits.dto.response.SmokeContextResponse;
 import com.sassi.smokehabits.entity.CigaretteEntry;
@@ -21,14 +22,17 @@ public class CigaretteService {
 
     private final CigaretteEntryRepository repository;
     private final UserRepository userRepository;
+    private final KafkaProducerService kafkaProducerService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public CigaretteService(
         CigaretteEntryRepository repository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        KafkaProducerService kafkaProducerService
     ) {
         this.repository = repository;
         this.userRepository = userRepository;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Caching(
@@ -55,6 +59,18 @@ public class CigaretteService {
         CigaretteEntry savedEntry = repository.save(entry);
 
         logger.debug("Cigarette logged with ID: {}", savedEntry.getId());
+
+        // Publish event to Kafka for analytics service
+        CigaretteLoggedEvent event = new CigaretteLoggedEvent(
+            savedEntry.getId(),
+            userId,
+            savedEntry.getTimestamp(),
+            cravingLevel,
+            context != null ? context.getId() : null,
+            context != null ? context.getContext() : null
+        );
+        kafkaProducerService.publishCigaretteLoggedEvent(event);
+
         return mapToResponse(savedEntry);
     }
 
@@ -78,6 +94,18 @@ public class CigaretteService {
         CigaretteEntry savedEntry = repository.save(entry);
 
         logger.debug("Cigarette logged with ID: {}", savedEntry.getId());
+
+        // Publish event to Kafka for analytics service
+        CigaretteLoggedEvent event = new CigaretteLoggedEvent(
+            savedEntry.getId(),
+            userId,
+            savedEntry.getTimestamp(),
+            cravingLevel,
+            null,
+            null
+        );
+        kafkaProducerService.publishCigaretteLoggedEvent(event);
+
         return mapToResponse(savedEntry);
     }
 
