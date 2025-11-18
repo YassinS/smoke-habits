@@ -1,7 +1,6 @@
 package com.sassi.smokehabits.entity;
 
 import jakarta.persistence.*;
-
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,14 +26,33 @@ public class User {
     @Column(nullable = false)
     private boolean consent = false;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "user",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private Set<CigaretteEntry> cigaretteEntries = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "user",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private Set<SmokeContext> smokeContexts = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+        mappedBy = "user",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
     private Set<RefreshToken> refreshTokens = new HashSet<>();
+
+    @OneToMany(
+        mappedBy = "user",
+        cascade = CascadeType.ALL,
+        orphanRemoval = true
+    )
+    private Set<ReductionGoal> reductionGoals = new HashSet<>();
 
     public User() {
         this.createdAt = Instant.now();
@@ -117,5 +135,13 @@ public class User {
 
     public void setRefreshTokens(Set<RefreshToken> refreshTokens) {
         this.refreshTokens = refreshTokens;
+    }
+
+    public Set<ReductionGoal> getReductionGoals() {
+        return reductionGoals;
+    }
+
+    public void setReductionGoals(Set<ReductionGoal> reductionGoals) {
+        this.reductionGoals = reductionGoals;
     }
 }
