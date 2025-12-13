@@ -15,13 +15,38 @@ public class CreateReductionGoalRequest {
     @Max(value = 365, message = "Duration must not exceed 365 days")
     private Integer durationInDays;
 
-    private ReductionGoal.ReductionStrategy strategy = ReductionGoal.ReductionStrategy.LINEAR;
+    @Min(value = 1, message = "Starting cigarettes per day must be at least 1")
+    @Max(
+        value = 100,
+        message = "Starting cigarettes per day must not exceed 100"
+    )
+    private Integer customStartingCigarettesPerDay;
+
+    private ReductionGoal.ReductionStrategy strategy =
+        ReductionGoal.ReductionStrategy.LINEAR;
 
     public CreateReductionGoalRequest() {}
 
-    public CreateReductionGoalRequest(Integer targetCigarettesPerDay, Integer durationInDays, ReductionGoal.ReductionStrategy strategy) {
+    public CreateReductionGoalRequest(
+        Integer targetCigarettesPerDay,
+        Integer durationInDays,
+        ReductionGoal.ReductionStrategy strategy
+    ) {
         this.targetCigarettesPerDay = targetCigarettesPerDay;
         this.durationInDays = durationInDays;
+        this.strategy = strategy;
+        this.customStartingCigarettesPerDay = null;
+    }
+
+    public CreateReductionGoalRequest(
+        Integer targetCigarettesPerDay,
+        Integer durationInDays,
+        Integer customStartingCigarettesPerDay,
+        ReductionGoal.ReductionStrategy strategy
+    ) {
+        this.targetCigarettesPerDay = targetCigarettesPerDay;
+        this.durationInDays = durationInDays;
+        this.customStartingCigarettesPerDay = customStartingCigarettesPerDay;
         this.strategy = strategy;
     }
 
@@ -40,6 +65,16 @@ public class CreateReductionGoalRequest {
 
     public void setDurationInDays(Integer durationInDays) {
         this.durationInDays = durationInDays;
+    }
+
+    public Integer getCustomStartingCigarettesPerDay() {
+        return customStartingCigarettesPerDay;
+    }
+
+    public void setCustomStartingCigarettesPerDay(
+        Integer customStartingCigarettesPerDay
+    ) {
+        this.customStartingCigarettesPerDay = customStartingCigarettesPerDay;
     }
 
     public ReductionGoal.ReductionStrategy getStrategy() {
